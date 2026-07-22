@@ -1,0 +1,10 @@
+node_modules/
+.env
+dist/
+build/
+*.log
+01-ARCHITECTURE.md
+03-DATA-MODELS-AND-FUNCTIONS.md
+02-FOLDER-STRUCTURE.md
+04-API-REFERENCE.md
+.claude/settings.local.json
