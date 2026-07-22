@@ -24,6 +24,7 @@ export default function EventTypeForm({ onCreate }) {
   const [form, setForm] = useState(EMPTY);
   const [fieldErrors, setFieldErrors] = useState({ questionLabels: {} });
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const update = (field, value) => setForm((f) => ({ ...f, [field]: value }));
   const clearFieldError = (field) => setFieldErrors((f) => ({ ...f, [field]: '' }));
@@ -67,6 +68,7 @@ export default function EventTypeForm({ onCreate }) {
     if (errors.name || errors.durationMinutes || Object.values(questionLabels).some(Boolean)) return;
 
     try {
+      setSubmitting(true);
       await onCreate({
         ...form,
         maxBookingsPerDay: form.maxBookingsPerDay === '' ? null : Number(form.maxBookingsPerDay)
@@ -75,6 +77,8 @@ export default function EventTypeForm({ onCreate }) {
       setFieldErrors({ questionLabels: {} });
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to create event type.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -220,7 +224,7 @@ export default function EventTypeForm({ onCreate }) {
       </div>
 
       {error && <p className="text-red-500 text-sm">{error}</p>}
-      <Button type="submit">Create event type</Button>
+      <Button type="submit" disabled={submitting}>{submitting ? 'Creating...' : 'Create event type'}</Button>
     </form>
   );
 }

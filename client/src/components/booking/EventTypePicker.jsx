@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
+import Spinner from '../common/Spinner';
 
-export default function EventTypePicker({ slug, eventTypes }) {
+export default function EventTypePicker({ slug, eventTypes, loading = false }) {
+  if (loading) return <Spinner label="Loading booking options..." />;
   if (eventTypes.length === 0) {
     return <p className="text-gray-500 text-sm mt-4">No booking options available right now.</p>;
   }

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { utcToLocalTime, dateHeaderParts, monthYearLabel } from '../../utils/timezone';
+import Spinner from '../common/Spinner';
 
 const INITIAL_ROWS = 5;
 
@@ -11,6 +12,10 @@ export default function WeekSlotGrid({ dates, slotsByDate, loading, hasPrev, has
     dates.forEach((date) => (slotsByDate[date] || []).forEach((iso) => set.add(utcToLocalTime(iso))));
     return Array.from(set).sort();
   }, [dates, slotsByDate]);
+
+  if (loading && dates.length === 0) {
+    return <Spinner label="Loading available dates..." />;
+  }
 
   if (dates.length === 0) {
     return <p className="text-gray-500 text-sm py-6 text-center">No available dates in the booking window.</p>;

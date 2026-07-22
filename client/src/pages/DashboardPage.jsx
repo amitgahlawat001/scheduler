@@ -10,19 +10,29 @@ import * as availabilityApi from '../api/availability.api';
 import * as bookingsApi from '../api/bookings.api';
 import * as analyticsApi from '../api/analytics.api';
 import { utcToLocalLabel } from '../utils/timezone';
+import Spinner from '../components/common/Spinner';
 
 const EVENT_COLORS = ['bg-brand/10 text-brand', 'bg-emerald-50 text-emerald-600', 'bg-amber-50 text-amber-600'];
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { rules, overrides, addRule, removeRule, addOverride, removeOverride } = useAvailability();
-  const { eventTypes } = useEventTypes();
+  const { rules, overrides, loading: availabilityLoading, addRule, removeRule, addOverride, removeOverride } = useAvailability();
+  const { eventTypes, loading: eventTypesLoading } = useEventTypes();
   const [bookingUrl, setBookingUrl] = useState('');
   const [upcoming, setUpcoming] = useState([]);
   const [stats, setStats] = useState(null);
+  const [upcomingLoading, setUpcomingLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [generatingLink, setGeneratingLink] = useState(false);
 
-  const loadUpcoming = useCallback(() => {
-    bookingsApi.listBookings({ upcoming: true }).then((data) => setUpcoming(data.bookings.slice(0, 5)));
+  const loadUpcoming = useCallback(async () => {
+    setUpcomingLoading(true);
+    try {
+      const data = await bookingsApi.listBookings({ upcoming: true });
+      setUpcoming(data.bookings.slice(0, 5));
+    } finally {
+      setUpcomingLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -30,12 +40,17 @@ export default function DashboardPage() {
   }, [loadUpcoming]);
 
   useEffect(() => {
-    analyticsApi.getStats({}).then(setStats);
+    analyticsApi.getStats({}).then(setStats).finally(() => setStatsLoading(false));
   }, []);
 
   const handleGenerateLink = async () => {
-    const data = await availabilityApi.generateLink();
-    setBookingUrl(data.bookingUrl);
+    setGeneratingLink(true);
+    try {
+      const data = await availabilityApi.generateLink();
+      setBookingUrl(data.bookingUrl);
+    } finally {
+      setGeneratingLink(false);
+    }
   };
 
   const initials = (user?.name || '?')
@@ -57,6 +72,7 @@ export default function DashboardPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={handleGenerateLink}
+            disabled={generatingLink}
             className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-500 hover:border-brand hover:text-brand transition-colors"
           >
             🔗 Get your booking link
@@ -89,14 +105,14 @@ export default function DashboardPage() {
           {/* Analytics */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-2">Analytics (last 30 days)</h2>
-            <StatsSummary stats={stats} />
+            <StatsSummary stats={stats} loading={statsLoading} />
           </section>
 
           {/* Availability */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Availability</h2>
-            <WeeklyRuleEditor rules={rules} onAdd={addRule} onRemove={removeRule} />
-            <OverrideList overrides={overrides} onAdd={addOverride} onRemove={removeOverride} />
+            <WeeklyRuleEditor rules={rules} onAdd={addRule} onRemove={removeRule} loading={availabilityLoading} />
+            <OverrideList overrides={overrides} onAdd={addOverride} onRemove={removeOverride} loading={availabilityLoading} />
           </section>
         </div>
 
@@ -109,7 +125,7 @@ export default function DashboardPage() {
                 View All →
               </Link>
             </div>
-            {upcoming.length === 0 && <p className="text-gray-500 text-sm">Nothing scheduled yet.</p>}
+            {upcomingLoading ? <Spinner label="Loading appointments..." /> : upcoming.length === 0 && <p className="text-gray-500 text-sm">Nothing scheduled yet.</p>}
             <ul className="flex flex-col gap-2">
               {upcoming.map((b, i) => {
                 const d = new Date(b.slotStartUTC);
@@ -142,7 +158,7 @@ export default function DashboardPage() {
                 Manage →
               </Link>
             </div>
-            {eventTypes.length === 0 && (
+            {eventTypesLoading ? <Spinner label="Loading event types..." /> : eventTypes.length === 0 && (
               <p className="text-gray-500 text-sm">
                 No event types yet.{' '}
                 <Link to="/bookings" className="text-brand hover:underline">

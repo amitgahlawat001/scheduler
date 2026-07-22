@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import Button from '../common/Button';
+import Spinner from '../common/Spinner';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const inputClass = 'border border-gray-300 rounded-md px-2 py-1.5 text-sm';
 
-export default function WeeklyRuleEditor({ rules, onAdd, onRemove }) {
+export default function WeeklyRuleEditor({ rules, onAdd, onRemove, loading = false }) {
   const [dayOfWeek, setDayOfWeek] = useState(1);
   const [startTimeUTC, setStartTimeUTC] = useState('09:00');
   const [endTimeUTC, setEndTimeUTC] = useState('17:00');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -24,9 +26,12 @@ export default function WeeklyRuleEditor({ rules, onAdd, onRemove }) {
     }
 
     try {
+      setSubmitting(true);
       await onAdd({ dayOfWeek: Number(dayOfWeek), startTimeUTC, endTimeUTC });
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to add rule.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -44,11 +49,11 @@ export default function WeeklyRuleEditor({ rules, onAdd, onRemove }) {
         <input type="time" value={startTimeUTC} onChange={(e) => setStartTimeUTC(e.target.value)} className={inputClass} />
         <span className="text-gray-500">to</span>
         <input type="time" value={endTimeUTC} onChange={(e) => setEndTimeUTC(e.target.value)} className={inputClass} />
-        <Button type="submit">Add</Button>
+        <Button type="submit" disabled={submitting}>{submitting ? 'Adding...' : 'Add'}</Button>
       </form>
       {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
 
-      {rules.length === 0 && <p className="text-gray-500 text-sm mb-2">No recurring availability set yet.</p>}
+      {loading ? <Spinner label="Loading availability..." /> : rules.length === 0 && <p className="text-gray-500 text-sm mb-2">No recurring availability set yet.</p>}
 
       <div className="flex flex-wrap gap-3">
         {rules.map((rule) => (

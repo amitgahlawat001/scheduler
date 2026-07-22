@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import Button from '../common/Button';
+import Spinner from '../common/Spinner';
 
 const inputClass = 'border border-gray-300 rounded-md px-2 py-1.5 text-sm';
 
-export default function OverrideList({ overrides, onAdd, onRemove }) {
+export default function OverrideList({ overrides, onAdd, onRemove, loading = false }) {
   const [date, setDate] = useState('');
   const [type, setType] = useState('unavailable');
   const [startTimeUTC, setStartTimeUTC] = useState('');
   const [endTimeUTC, setEndTimeUTC] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -30,6 +32,7 @@ export default function OverrideList({ overrides, onAdd, onRemove }) {
     }
 
     try {
+      setSubmitting(true);
       const payload = { date, type };
       if (type === 'extra_hours') {
         payload.startTimeUTC = new Date(`${date}T${startTimeUTC}:00.000Z`).toISOString();
@@ -39,6 +42,8 @@ export default function OverrideList({ overrides, onAdd, onRemove }) {
       setDate('');
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to add override.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -58,11 +63,11 @@ export default function OverrideList({ overrides, onAdd, onRemove }) {
             <input type="time" value={endTimeUTC} onChange={(e) => setEndTimeUTC(e.target.value)} className={inputClass} />
           </>
         )}
-        <Button type="submit">Add</Button>
+        <Button type="submit" disabled={submitting}>{submitting ? 'Adding...' : 'Add'}</Button>
       </form>
       {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
 
-      {overrides.length === 0 && <p className="text-gray-500 text-sm mb-2">No date-specific overrides yet.</p>}
+      {loading ? <Spinner label="Loading overrides..." /> : overrides.length === 0 && <p className="text-gray-500 text-sm mb-2">No date-specific overrides yet.</p>}
 
       <div className="flex flex-wrap gap-3">
         {overrides.map((o) => (

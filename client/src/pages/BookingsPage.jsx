@@ -4,17 +4,24 @@ import { useEventTypes } from '../hooks/useEventTypes';
 import EventTypeForm from '../components/eventTypes/EventTypeForm';
 import EventTypeList from '../components/eventTypes/EventTypeList';
 import Button from '../components/common/Button';
+import Spinner from '../components/common/Spinner';
 import { utcToLocalLabel } from '../utils/timezone';
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [upcoming, setUpcoming] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const { eventTypes, create, remove } = useEventTypes();
+  const { eventTypes, loading: eventTypesLoading, create, remove } = useEventTypes();
+  const [bookingsLoading, setBookingsLoading] = useState(true);
 
   const reload = useCallback(async () => {
-    const data = await bookingsApi.listBookings({ upcoming });
-    setBookings(data.bookings);
+    setBookingsLoading(true);
+    try {
+      const data = await bookingsApi.listBookings({ upcoming });
+      setBookings(data.bookings);
+    } finally {
+      setBookingsLoading(false);
+    }
   }, [upcoming]);
 
   useEffect(() => {
@@ -42,7 +49,7 @@ export default function BookingsPage() {
             />
           </div>
         )}
-        <EventTypeList eventTypes={eventTypes} onRemove={remove} />
+        <EventTypeList eventTypes={eventTypes} onRemove={remove} loading={eventTypesLoading} />
       </section>
 
       <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -58,7 +65,9 @@ export default function BookingsPage() {
           </div>
         </div>
 
-        {bookings.length === 0 && (
+        {bookingsLoading ? (
+          <Spinner label="Loading bookings..." />
+        ) : bookings.length === 0 && (
           <p className="text-gray-500 text-sm">{upcoming ? 'No upcoming bookings.' : 'No past bookings.'}</p>
         )}
 

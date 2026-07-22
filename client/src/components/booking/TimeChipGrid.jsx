@@ -1,6 +1,8 @@
 import { utcToLocalLabel } from '../../utils/timezone';
+import Spinner from '../common/Spinner';
 
-export default function TimeChipGrid({ slots, onSelect }) {
+export default function TimeChipGrid({ slots, onSelect, loading = false }) {
+  if (loading) return <Spinner label="Loading available times..." />;
   if (slots.length === 0) return <p className="text-gray-500 text-sm">No slots left on this date — pick another.</p>;
 
   return (

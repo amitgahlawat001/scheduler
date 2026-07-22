@@ -12,6 +12,7 @@ export default function PublicBookingPage() {
   const [eventType, setEventType] = useState(null);
   const [notFound, setNotFound] = useState(false);
   const [dates, setDates] = useState([]);
+  const [datesLoading, setDatesLoading] = useState(true);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [confirmed, setConfirmed] = useState(null);
 
@@ -22,7 +23,7 @@ export default function PublicBookingPage() {
       .getEventTypeDetail(slug, eventTypeSlug)
       .then(setEventType)
       .catch(() => setNotFound(true));
-    publicApi.getAvailableDates(slug, eventTypeSlug).then(setDates);
+    publicApi.getAvailableDates(slug, eventTypeSlug).then(setDates).finally(() => setDatesLoading(false));
   }, [slug, eventTypeSlug]);
 
   if (notFound) return <NotFoundPage />;
@@ -57,7 +58,7 @@ export default function PublicBookingPage() {
           <WeekSlotGrid
             dates={windowDates}
             slotsByDate={slotsByDate}
-            loading={loading}
+            loading={loading || datesLoading}
             hasPrev={hasPrev}
             hasNext={hasNext}
             onPrev={prev}

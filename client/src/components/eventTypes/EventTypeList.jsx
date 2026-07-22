@@ -1,6 +1,8 @@
 import Button from '../common/Button';
+import Spinner from '../common/Spinner';
 
-export default function EventTypeList({ eventTypes, onRemove }) {
+export default function EventTypeList({ eventTypes, onRemove, loading = false }) {
+  if (loading) return <Spinner label="Loading event types..." />;
   if (eventTypes.length === 0) return <p className="text-gray-500 text-sm">No event types yet.</p>;
 
   return (

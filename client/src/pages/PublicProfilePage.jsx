@@ -9,16 +9,18 @@ export default function PublicProfilePage() {
   const { slug } = useParams();
   const [profile, setProfile] = useState(null);
   const [notFound, setNotFound] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     publicApi
       .getPublicProfile(slug)
       .then(setProfile)
-      .catch(() => setNotFound(true));
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false));
   }, [slug]);
 
   if (notFound) return <NotFoundPage />;
-  if (!profile) return <Spinner />;
+  if (loading) return <Spinner full label="Loading profile..." />;
 
   return (
     <div className="min-h-[calc(100vh-56px)] bg-gradient-to-br from-brand-light/20 via-blue-50 to-brand/5 px-4 py-12">
@@ -28,7 +30,7 @@ export default function PublicProfilePage() {
         )}
         <h2 className="text-xl font-semibold text-gray-800 mt-3">{profile.hostDisplayName}</h2>
         {profile.bio && <p className="text-gray-500 mt-1">{profile.bio}</p>}
-        <EventTypePicker slug={slug} eventTypes={profile.eventTypes} />
+        <EventTypePicker slug={slug} eventTypes={profile.eventTypes} loading={loading} />
       </div>
     </div>
   );

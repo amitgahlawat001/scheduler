@@ -14,6 +14,7 @@ export default function ManageBookingPage() {
   const [notFound, setNotFound] = useState(false);
   const [showReschedule, setShowReschedule] = useState(false);
   const [message, setMessage] = useState('');
+  const [cancelling, setCancelling] = useState(false);
 
   const reload = () => {
     publicApi
@@ -28,9 +29,14 @@ export default function ManageBookingPage() {
   if (!booking) return <Spinner full />;
 
   const cancel = async () => {
-    await publicApi.cancelBookingByToken(cancelToken);
-    setMessage('Booking cancelled.');
-    reload();
+    setCancelling(true);
+    try {
+      await publicApi.cancelBookingByToken(cancelToken);
+      setMessage('Booking cancelled.');
+      reload();
+    } finally {
+      setCancelling(false);
+    }
   };
 
   return (
@@ -59,8 +65,8 @@ export default function ManageBookingPage() {
         ) : (
           <div className="flex gap-2 mt-6">
             <Button onClick={() => setShowReschedule(true)}>Reschedule</Button>
-            <Button variant="danger" onClick={cancel}>
-              Cancel booking
+            <Button variant="danger" onClick={cancel} disabled={cancelling}>
+              {cancelling ? 'Cancelling...' : 'Cancel booking'}
             </Button>
           </div>
         )}

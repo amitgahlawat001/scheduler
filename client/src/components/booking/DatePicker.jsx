@@ -1,4 +1,7 @@
-export default function DatePicker({ dates, selectedDate, onSelect }) {
+import Spinner from '../common/Spinner';
+
+export default function DatePicker({ dates, selectedDate, onSelect, loading = false }) {
+  if (loading) return <Spinner label="Loading available dates..." />;
   if (dates.length === 0) return <p className="text-gray-500 text-sm">No available dates in the booking window.</p>;
 
   return (

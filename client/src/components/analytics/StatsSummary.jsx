@@ -1,4 +1,7 @@
-export default function StatsSummary({ stats }) {
+import Spinner from '../common/Spinner';
+
+export default function StatsSummary({ stats, loading = false }) {
+  if (loading) return <Spinner label="Loading analytics..." />;
   if (!stats) return null;
 
   return (
